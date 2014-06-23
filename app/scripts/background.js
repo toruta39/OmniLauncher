@@ -34,7 +34,7 @@ ApplicationList.prototype.filterSuggestions = function(keyword) {
 }
 
 function navigateToSetting(id) {
-    chrome.tabs.create({url: 'chrome://extensions#' + id});
+    chrome.tabs.create({url: 'chrome://extensions/?id=' + id});
 }
 
 var applicationList = new ApplicationList();
