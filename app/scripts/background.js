@@ -6,6 +6,7 @@ function ApplicationList() {
 
 ApplicationList.prototype.getAll = function() {
     chrome.management.getAll(function(info) {
+        this.items.length = 0;
         Array.prototype.push.apply(this.items, info);
     }.bind(this));
 };
@@ -37,9 +38,15 @@ function navigateToSetting(id) {
     chrome.tabs.create({url: 'chrome://extensions/?id=' + id});
 }
 
-var applicationList = new ApplicationList();
+var applicationList = new ApplicationList(),
+    refreshApplicationList = applicationList.getAll.bind(applicationList);
 
-applicationList.getAll();
+refreshApplicationList();
+
+chrome.management.onInstalled.addListener(refreshApplicationList);
+chrome.management.onUninstalled.addListener(refreshApplicationList);
+chrome.management.onEnabled.addListener(refreshApplicationList);
+chrome.management.onDisabled.addListener(refreshApplicationList);
 
 chrome.runtime.onInstalled.addListener(function (details) {
     console.log('previousVersion', details.previousVersion);
@@ -55,7 +62,7 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
         matchedItem = filteredItems[0];
 
     if (matchedItem) {
-        if (matchedItem.isApp) {
+        if (matchedItem.isApp && matchedItem.enabled) {
             chrome.management.launchApp(matchedItem.id);
         } else {
             navigateToSetting(matchedItem.id);
