@@ -4,6 +4,14 @@ function ApplicationList() {
     this.items = [];
 }
 
+function Keyword(query) {
+    this.query = query.toLowerCase();
+}
+
+Keyword.prototype.match = function(target) {
+    return !!~target.toLowerCase().indexOf(this.query); // jshint ignore:line
+};
+
 ApplicationList.prototype.getAll = function() {
     chrome.management.getAll(function(info) {
         this.items.length = 0;
@@ -11,11 +19,12 @@ ApplicationList.prototype.getAll = function() {
     }.bind(this));
 };
 
-ApplicationList.prototype.filter = function(keyword) {
-    var result = [];
+ApplicationList.prototype.filter = function(query) {
+    var keyword = new Keyword(query),
+        result = [];
 
-    this.items.forEach(function(item, index, array) {
-        if (~item.name.toLowerCase().indexOf(keyword.toLowerCase())) {
+    this.items.forEach(function(item) {
+        if (keyword.match(item.name)) {
             result.push(item);
         }
     });
@@ -26,13 +35,13 @@ ApplicationList.prototype.filter = function(keyword) {
 ApplicationList.prototype.filterSuggestions = function(keyword) {
     var filteredItems = this.filter(keyword);
 
-    return filteredItems.map(function(item, index, array) {
+    return filteredItems.map(function(item) {
         return {
             content: item.name,
             description: item.name
         };
     });
-}
+};
 
 function navigateToSetting(id) {
     chrome.tabs.create({url: 'chrome://extensions/?id=' + id});
