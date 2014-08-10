@@ -16,6 +16,12 @@ ApplicationList.prototype.getAll = function() {
     chrome.management.getAll(function(info) {
         this.items.length = 0;
         Array.prototype.push.apply(this.items, info);
+        this.items.push({
+            enabled: true,
+            isManual: true,
+            name: 'Store',
+            homepageUrl: 'https://chrome.google.com/webstore/category/apps'
+        });
     }.bind(this));
 };
 
@@ -73,6 +79,8 @@ chrome.omnibox.onInputEntered.addListener(function(text) {
     if (matchedItem) {
         if (matchedItem.isApp && matchedItem.enabled) {
             chrome.management.launchApp(matchedItem.id);
+        } else if (matchedItem.isManual && matchedItem.enabled) {
+            chrome.tabs.create({url: matchedItem.homepageUrl});
         } else {
             navigateToSetting(matchedItem.id);
         }
