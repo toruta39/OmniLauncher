@@ -1,54 +1,5 @@
 'use strict';
 
-function ApplicationList() {
-    this.items = [];
-}
-
-function Keyword(query) {
-    this.query = query.toLowerCase();
-}
-
-Keyword.prototype.match = function(target) {
-    return !!~target.toLowerCase().indexOf(this.query); // jshint ignore:line
-};
-
-ApplicationList.prototype.getAll = function() {
-    chrome.management.getAll(function(info) {
-        this.items.length = 0;
-        Array.prototype.push.apply(this.items, info);
-        this.items.push({
-            enabled: true,
-            isManual: true,
-            name: 'Store',
-            homepageUrl: 'https://chrome.google.com/webstore/category/apps'
-        });
-    }.bind(this));
-};
-
-ApplicationList.prototype.filter = function(query) {
-    var keyword = new Keyword(query),
-        result = [];
-
-    this.items.forEach(function(item) {
-        if (keyword.match(item.name)) {
-            result.push(item);
-        }
-    });
-
-    return result;
-};
-
-ApplicationList.prototype.filterSuggestions = function(keyword) {
-    var filteredItems = this.filter(keyword);
-
-    return filteredItems.map(function(item) {
-        return {
-            content: item.name,
-            description: item.name
-        };
-    });
-};
-
 function navigateToSetting(id) {
     chrome.tabs.create({url: 'chrome://extensions/?id=' + id});
 }
@@ -62,10 +13,6 @@ chrome.management.onInstalled.addListener(refreshApplicationList);
 chrome.management.onUninstalled.addListener(refreshApplicationList);
 chrome.management.onEnabled.addListener(refreshApplicationList);
 chrome.management.onDisabled.addListener(refreshApplicationList);
-
-chrome.runtime.onInstalled.addListener(function (details) {
-    console.log('previousVersion', details.previousVersion);
-});
 
 chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
     var suggestions = applicationList.filterSuggestions(text);
