@@ -20,7 +20,7 @@ chrome.omnibox.onInputChanged.addListener(function(text, suggest) {
 });
 
 chrome.omnibox.onInputEntered.addListener(function(text) {
-    var filteredItems = applicationList.filter(text),
+    var filteredItems = applicationList.search(text),
         matchedItem = filteredItems[0];
 
     if (matchedItem) {

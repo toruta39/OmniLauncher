@@ -17,11 +17,15 @@ ApplicationList.prototype.getAll = function() {
     }.bind(this));
 };
 
-ApplicationList.prototype.filter = function(keyword) {
-    if (!keyword.length) { return _.clone(this.items); }
+ApplicationList.prototype.search = function(keyword) {
+    return this.proceedSearch(this.items, keyword);
+};
 
-    var chars = keyword.split(''),
-        result = _.clone(this.items);
+ApplicationList.prototype.proceedSearch = function(items, keyword) {
+    var chars = keyword.toLowerCase().split(''),
+        result = _.clone(items);
+
+    if (!keyword.length) { return result; }
 
     result = _.filter(result, function(item) {
         var name = item.name.toLowerCase(),
@@ -36,16 +40,22 @@ ApplicationList.prototype.filter = function(keyword) {
 
         if (isMatched) {
             item._score = 0;
+            item._snippetLength = 0;
+            item._snippetIndex = -1;
 
             _.every(_.range(1, keyword.length + 1), function(i) {
-                var snippet = keyword.toLowerCase().substr(0, i);
-                if (name.indexOf(snippet) >= 0) {
-                    item._score += i;
+                var snippet = keyword.toLowerCase().substr(0, i),
+                    snippetIndex = name.indexOf(snippet);
+                if (snippetIndex >= 0) {
+                    item._snippetLength = snippet.length;
+                    item._snippetIndex = snippetIndex;
                     return true;
                 } else {
                     return false;
                 }
             });
+
+            item._score = item._snippetLength * 1000 - item._snippetIndex;
         }
 
         return isMatched;
@@ -57,7 +67,7 @@ ApplicationList.prototype.filter = function(keyword) {
 };
 
 ApplicationList.prototype.filterSuggestions = function(keyword) {
-    var filteredItems = this.filter(keyword);
+    var filteredItems = this.search(keyword);
 
     return filteredItems.map(function(item) {
         return {

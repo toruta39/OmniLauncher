@@ -1,38 +1,47 @@
-/* global describe, it, assert, Keyword */
+/* global describe, it, beforeEach, assert, ApplicationList, _ */
 
 (function () {
     'use strict';
 
-    describe('Keyword', function () {
-        describe('#match', function () {
-            it('should exist', function () {
-                var keyword = new Keyword('someText');
+    describe('ApplicationList', function () {
+        describe('#proceedSearch', function () {
+            beforeEach(function() {
+                this.list = new ApplicationList();
+                this.items = [
+                    { name: 'So me want an elevator' },
+                    { name: 'Nomatch' },
+                    { name: 'textSome' },
+                    { name: 'someText' }
+                ];
+            });
 
-                assert.isFunction(keyword.match);
+            it('should exist', function () {
+                assert.isFunction(this.list.proceedSearch);
             });
 
             it('should match identical string', function () {
-                var keyword = new Keyword('someText');
+                var result = this.list.proceedSearch(this.items, 'someText');
 
-                assert.ok(keyword.match('someText'));
+                assert.equal(result.length, 1);
+                assert.notEqual(_.findIndex(result, { name: 'someText' }), -1);
             });
 
-            it('should match string that contains identical string', function () {
-                var keyword = new Keyword('someText');
+            it('should match string that contains chars in identical order', function () {
+                var result = this.list.proceedSearch(this.items, 'some');
 
-                assert.ok(keyword.match('This is someText.'));
+                assert.equal(result.length, 3);
+                assert.notEqual(_.findIndex(result, { name: 'So me want an elevator' }), -1);
+                assert.notEqual(_.findIndex(result, { name: 'someText' }), -1);
+                assert.notEqual(_.findIndex(result, { name: 'textSome' }), -1);
             });
 
-            it('should unmatch string that doesn\'t contain identical string', function () {
-                var keyword = new Keyword('someText');
+            it('should sort results in an order that reflects the relevance', function () {
+                var result = this.list.proceedSearch(this.items, 'some');
 
-                assert.notOk(keyword.match('noText'));
-            });
-
-            it.skip('should match string that contains characteristics of query', function () {
-                var keyword = new Keyword('sT');
-
-                assert.ok(keyword.match('someText'));
+                assert.equal(result.length, 3);
+                assert.equal(_.findIndex(result, { name: 'someText' }), 0);
+                assert.equal(_.findIndex(result, { name: 'textSome' }), 1);
+                assert.equal(_.findIndex(result, { name: 'So me want an elevator' }), 2);
             });
         });
     });
